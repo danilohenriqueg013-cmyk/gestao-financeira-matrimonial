@@ -1,0 +1,11 @@
+{
+  "name":"Gestão Financeira Matrimonial",
+  "short_name":"Nosso Caixa",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "background_color":"#ffffff",
+  "theme_color":"#111111",
+  "description":"Controle financeiro compartilhado de Danilo e Thayna",
+  "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
