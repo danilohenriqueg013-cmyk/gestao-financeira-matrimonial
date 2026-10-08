@@ -33,7 +33,7 @@
     dashboard:'Início',transactions:'Lançamentos',accounts:'Contas e saldos',cards:'Cartões de crédito',
     transfers:'Transferências',goals:'Metas',categories:'Categorias',more:S.lovableSectionTitle||'Mais'
   };
-  const pageTitle=()=>labels[S.page]||'Nosso Caixa';
+  const pageTitle=()=>labels[S.page]||'Gestão Financeira';
 
   const navItem=(page,label,ic,extra='')=>{
     const active=S.page===page && (!extra || S.lovableSectionTitle===extra);
@@ -48,7 +48,7 @@
       : `<button class="lov-outline-action" onclick="G.modal('txchoice')">${icon('plus')}<span>Novo lançamento</span></button>`;
     return `<div class="shell lov-shell">
       <aside class="side lov-side">
-        <div class="lov-brand"><strong>Nosso Caixa</strong><span>Danilo &amp; Thayna</span></div>
+        <div class="lov-brand"><strong>Gestão Financeira</strong><span>Danilo &amp; Thayna</span></div>
         <button class="lov-new" onclick="G.modal('txchoice')">${icon('plus')}<span>Novo lançamento</span></button>
         <nav class="lov-nav">
           ${navItem('dashboard','Início','home')}
@@ -73,7 +73,7 @@
         </div>
       </aside>
 
-      <div class="lov-mobile-head"><div><strong>Nosso Caixa</strong><span>Danilo &amp; Thayna</span></div><button onclick="G.theme()">${icon('moon')}</button></div>
+      <div class="lov-mobile-head"><div><strong>Gestão Financeira</strong><span>Danilo &amp; Thayna</span></div><button onclick="G.theme()">${icon('moon')}</button></div>
 
       <main class="main lov-main">
         <header class="top lov-top"><div><h1>${pageTitle()}</h1></div><div class="actions">${topAction}</div></header>
