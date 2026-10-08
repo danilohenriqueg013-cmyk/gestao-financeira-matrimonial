@@ -58,21 +58,29 @@
     const net=receipts-expenses;
 
     const monthRows=S.tx.filter(t=>H.monthKey(H.txdate(t))===S.txMonth&&real(t));
+    const isCurrentMonth=S.txMonth===today().slice(0,7);
     const summaries=S.people.map(p=>{
       const rr=monthRows.filter(t=>t.responsible_person_id===p.id);
       const inc=rr.filter(t=>t.type==='income').reduce((s,t)=>s+amount(t),0);
       const exp=rr.filter(expenseLike).reduce((s,t)=>s+amount(t),0);
-      return {p,inc,exp,net:inc-exp};
+      const pendingInc=rr.filter(t=>t.type==='income'&&t.status==='pending').reduce((s,t)=>s+amount(t),0);
+      const pendingExp=rr.filter(t=>expenseLike(t)&&t.status==='pending').reduce((s,t)=>s+amount(t),0);
+      const balance=Number(S.balances.find(b=>b.person_id===p.id)?.current_balance||0);
+      const projected=isCurrentMonth?balance+pendingInc-pendingExp:inc-exp;
+      return {p,inc,exp,balance,projected};
     });
-    const all=summaries.reduce((a,x)=>({inc:a.inc+x.inc,exp:a.exp+x.exp,net:a.net+x.net}),{inc:0,exp:0,net:0});
+    const all=summaries.reduce((a,x)=>({inc:a.inc+x.inc,exp:a.exp+x.exp,projected:a.projected+x.projected}),{inc:0,exp:0,projected:0});
     const sims=S.tx.filter(t=>H.monthKey(H.txdate(t))===S.txMonth&&t.status==='simulation').reduce((s,t)=>s+amount(t),0);
+    const projectionRule=isCurrentMonth
+      ? 'Mês atual: projeção = saldo real de hoje + receitas pendentes − despesas pendentes.'
+      : 'Mês futuro: projeção sem carregar o saldo atual. Quando este mês virar o mês atual, o saldo real que sobrou do mês anterior entra automaticamente.';
 
     return `<div class="monthbar"><button class="btn sm" onclick="G.shiftTxMonth(-1)">‹</button><select class="btn monthselect" onchange="G.txMonth(this.value)">${monthOptions()}</select><button class="btn sm" onclick="G.shiftTxMonth(1)">›</button></div>
     <div class="tabs">${[['all','Todos'],['pending','Pendentes'],['simulation','Simulações'],['expense','Despesas'],['income','Receitas'],['card_payment','Faturas']].map(([v,l])=>`<button class="tab ${S.filter===v?'active':''}" onclick="G.filter('${v}')">${l}</button>`).join('')}</div>
-    <section class="panel summarypanel"><div class="panelhead"><h2>Resumo de ${H.monthLabel(S.txMonth)}</h2><span class="small muted">Simulações não entram nos totais${sims>0?` · ${brl(sims)} em simulação`:''}</span></div>
-      <div class="tablewrap"><table class="table summarytable"><thead><tr><th>Descrição</th><th>Receitas</th><th>Despesas</th><th>Saldo atual</th><th>Sem saldo inicial</th></tr></thead><tbody>
-      ${summaries.map(x=>`<tr><td><b>${esc(x.p.name)}</b></td><td>${brl(x.inc)}</td><td>${brl(x.exp)}</td><td class="${Number(S.balances.find(b=>b.person_id===x.p.id)?.current_balance||0)<0?'negative':''}">${brl(Number(S.balances.find(b=>b.person_id===x.p.id)?.current_balance||0))}</td><td class="${x.net<0?'negative':''}">${brl(x.net)}</td></tr>`).join('')}
-      <tr class="totalrow"><td><b>Total</b></td><td>${brl(all.inc)}</td><td>${brl(all.exp)}</td><td class="${S.family<0?'negative':''}">${brl(S.family)}</td><td class="${all.net<0?'negative':''}">${brl(all.net)}</td></tr></tbody></table></div>
+    <section class="panel summarypanel"><div class="panelhead"><div><h2>Resumo de ${H.monthLabel(S.txMonth)}</h2><span class="small muted">${projectionRule}</span></div><span class="small muted">Simulações não entram nos totais${sims>0?` · ${brl(sims)} em simulação`:''}</span></div>
+      <div class="tablewrap"><table class="table summarytable"><thead><tr><th>Descrição</th><th>Receitas</th><th>Despesas</th><th>Saldo atual</th><th>Projeção do mês</th></tr></thead><tbody>
+      ${summaries.map(x=>`<tr><td><b>${esc(x.p.name)}</b></td><td>${brl(x.inc)}</td><td>${brl(x.exp)}</td><td class="${isCurrentMonth&&x.balance<0?'negative':''}">${isCurrentMonth?brl(x.balance):'—'}</td><td class="${x.projected<0?'negative':'positive'}"><b>${brl(x.projected)}</b></td></tr>`).join('')}
+      <tr class="totalrow"><td><b>Total</b></td><td>${brl(all.inc)}</td><td>${brl(all.exp)}</td><td class="${isCurrentMonth&&S.family<0?'negative':''}">${isCurrentMonth?brl(S.family):'—'}</td><td class="${all.projected<0?'negative':'positive'}"><b>${brl(all.projected)}</b></td></tr></tbody></table></div>
     </section>
     <section class="panel"><div class="panelhead"><div><h2>Lançamentos</h2><div class="small muted"></div></div><button class="btn sm" onclick="G.csv()">Exportar CSV</button></div>
       ${rows.length?`<div class="tablewrap"><table class="table"><thead><tr><th>Descrição</th><th><select class="thfilter" onchange="G.setTxPerson(this.value)"><option value="all">Responsável: todos</option>${S.people.map(p=>`<option value="${p.id}" ${S.txPerson===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select></th><th><select class="thfilter" onchange="G.setTxDue(this.value)"><option value="asc" ${S.txDue==='asc'?'selected':''}>Vencimento ↑</option><option value="desc" ${S.txDue==='desc'?'selected':''}>Vencimento ↓</option><option value="overdue" ${S.txDue==='overdue'?'selected':''}>Vencidos</option><option value="next7" ${S.txDue==='next7'?'selected':''}>Próx. 7 dias</option></select></th><th><select class="thfilter" onchange="G.setTxStatus(this.value)"><option value="all">Status: todos</option>${statusOptions()}</select></th><th>Valor</th><th></th></tr></thead><tbody>
