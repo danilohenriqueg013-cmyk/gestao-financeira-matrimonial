@@ -174,7 +174,6 @@
       </section>`;
   };
 
-  const oldTxMonth=G.txMonth?.bind(G),oldShiftTx=G.shiftTxMonth?.bind(G);
   Object.assign(G,{
     dashboardMonthV9(v){S.dashboardMonth=v;render()},
     shiftDashboardMonthV9(n){const months=allMonths(),i=months.indexOf(S.dashboardMonth),j=Math.max(0,Math.min(months.length-1,i+n));S.dashboardMonth=months[j];render()},
@@ -184,6 +183,6 @@
     detailMonthV9(v){S.dashboardMonth=v;render()},
     shiftDetailMonthV9(n){const months=allMonths(),i=months.indexOf(S.dashboardMonth),j=Math.max(0,Math.min(months.length-1,i+n));S.dashboardMonth=months[j];render()},
     txMonth(v){S.txMonth=v;S.dashboardMonth=v;render()},
-    shiftTxMonth(n){if(oldShiftTx){oldShiftTx(n);S.dashboardMonth=S.txMonth}else{S.txMonth=shiftMonth(S.txMonth||curMonth(),n);S.dashboardMonth=S.txMonth;render()}}
+    shiftTxMonth(n){S.txMonth=shiftMonth(S.txMonth||curMonth(),n);S.dashboardMonth=S.txMonth;render()}
   });
 })();
