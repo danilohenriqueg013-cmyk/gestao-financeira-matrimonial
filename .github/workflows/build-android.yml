@@ -1,0 +1,53 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - "android/**"
+      - ".github/workflows/build-android.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+
+      - name: Build APK
+        run: gradle --no-daemon -p android assembleDebug
+
+      - name: Prepare APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Gestao-Financeira.apk
+
+      - name: Publish APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-latest
+          name: "Gestão Financeira — Android"
+          body: |
+            APK instalável do aplicativo Gestão Financeira de Danilo & Thayna.
+            
+            Baixe o arquivo Gestao-Financeira.apk e instale no Android.
+            O aplicativo usa o mesmo GitHub Pages + Supabase da versão oficial.
+          files: Gestao-Financeira.apk
+          make_latest: true
+          overwrite_files: true
