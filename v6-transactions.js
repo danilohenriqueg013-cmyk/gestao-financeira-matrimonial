@@ -97,9 +97,11 @@
       ${sim?`<div class="reneg-sim"><div><b>Parcelamento apenas simulado — não contabilizado</b><small>Hoje a fatura original continua valendo. Só muda quando você confirmar que realmente aceitou o acordo no banco.</small></div><div class="reneg-values"><span>Entrada <b>${brl(sim.entry_amount)}</b></span><span>${sim.installments_count}x de <b>${brl(sim.installment_amount)}</b></span><span>Total do acordo <b>${brl(sim.total_amount)}</b></span></div><button class="btn primary" onclick="G.acceptRenegV6('${sim.id}')">✓ Eu aceitei esse parcelamento</button></div>`:contracted?`<div class="reneg-contracted"><b>Parcelamento confirmado</b><span>Entrada ${brl(contracted.entry_amount)} + ${contracted.installments_count}x de ${brl(contracted.installment_amount)} · total ${brl(contracted.total_amount)}</span></div>`:''}
       <div class="panelhead invoice-items-head"><h2>Lançamentos deste cartão</h2><span class="small muted">${its.length} item(ns)</span></div>
       ${its.length?`<div class="tablewrap"><table class="table invoice-items"><thead><tr><th>Descrição</th><th>Parcela</th><th>Valor</th><th>Reembolso</th></tr></thead><tbody>${its.map(i=>`<tr><td><b>${esc(i.item)}</b><div class="small muted">${esc(i.item_type||'')}</div></td><td>${esc(i.installment_label||'—')}</td><td>${brl(i.amount)}</td><td>${Number(i.reimbursement_expected||0)>0?`${brl(i.reimbursement_expected)}${i.reimburser?' · '+esc(i.reimburser):''}`:'—'}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Não há itens detalhados cadastrados para este cartão neste mês.</div>'}
-      <div class="formactions"><button class="btn" onclick="G.close()">Fechar</button><button class="btn" onclick="G.go('cards');S.cardFilter='${c.id}';S.cardMonth='${m}';render()">Abrir área de cartões</button></div>
+      <div class="formactions"><button class="btn" onclick="G.close()">Fechar</button><button class="btn" onclick="G.openCardAreaV6('${c.id}','${m}')">Abrir área de cartões</button></div>
     </div></div>`;
   };
+
+  G.openCardAreaV6=(cardId,m)=>{S.cardFilter=cardId;S.cardMonth=m;S.page='cards';S.modal=null;render()};
 
   G.acceptRenegV6=async id=>{
     const r=by(S.reneg,id);
