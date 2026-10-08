@@ -33,7 +33,7 @@
     dashboard:'Início',transactions:'Lançamentos',accounts:'Contas e saldos',cards:'Cartões de crédito',
     transfers:'Transferências',goals:'Metas',categories:'Categorias',more:S.lovableSectionTitle||'Mais'
   };
-  const pageTitle=()=>labels[S.page]||'Gestão Financeira';
+  const pageTitle=()=>S.page==='more'?(S.lovableSectionTitle||'Mais'):(labels[S.page]||'Gestão Financeira');
 
   const navItem=(page,label,ic,extra='')=>{
     const active=S.page===page && (!extra || S.lovableSectionTitle===extra);
