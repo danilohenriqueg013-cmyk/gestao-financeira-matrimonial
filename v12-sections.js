@@ -9,8 +9,8 @@
     let html=previousLayout(body);
     if(PHOTO){
       html=html.replace(
-        '<div class="lov-brand"><strong>Nosso Caixa</strong><span>Danilo &amp; Thayna</span></div>',
-        `<div class="lov-brand lov-brand-with-photo"><img class="lov-couple-photo" src="${PHOTO}" alt="Danilo e Thayna"><div><strong>Nosso Caixa</strong><span>Danilo &amp; Thayna</span></div></div>`
+        '<div class="lov-brand"><strong>Gestão Financeira</strong><span>Danilo &amp; Thayna</span></div>',
+        `<div class="lov-brand lov-brand-with-photo"><img class="lov-couple-photo" src="${PHOTO}" alt="Danilo e Thayna"><div><strong>Gestão Financeira</strong><span>Danilo &amp; Thayna</span></div></div>`
       );
     }
     return html;
