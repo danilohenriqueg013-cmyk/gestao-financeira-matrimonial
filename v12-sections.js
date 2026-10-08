@@ -82,10 +82,73 @@
 
   function renegotiationsPage(){
     const rows=[...(S.reneg||[])].sort((a,b)=>String(a.created_at||'').localeCompare(String(b.created_at||'')));
-    return `<div class="lov-section-toolbar"><p>Simulações só viram obrigação real quando você confirma que contratou.</p></div>
+    const detail=S.renegDetailId?by(rows,S.renegDetailId):null;
+
+    if(detail){
+      const card=by(S.cards,detail.credit_card_id);
+      const options=(S.renegOptions||[]).filter(o=>o.renegotiation_id===detail.id).sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0));
+      const selected=options.find(o=>o.selected);
+      return `<button class="lov-back" onclick="G.closeRenegDetailV16()">← Voltar às renegociações</button>
+        <section class="lov-reneg-detail-head">
+          <div>
+            <span>${esc(card?.name||'Cartão')} · ${status(detail.status)}</span>
+            <h2>${esc(detail.description)}</h2>
+            <p>Valor original: <b>${brl(detail.original_amount)}</b>. Escolha abaixo qual opção quer usar na simulação.</p>
+          </div>
+          ${detail.status==='simulation'&&selected?`<button class="btn primary" onclick="G.contract('${detail.id}')">✓ Contratei esta opção</button>`:''}
+        </section>
+
+        ${selected?`<section class="lov-selected-plan">
+          <div><span>Opção atualmente escolhida</span><b>${esc(selected.label)}</b></div>
+          <div><span>Entrada</span><b>${brl(selected.entry_amount)}</b></div>
+          <div><span>Parcelas</span><b>${selected.installments_count}x de ${brl(selected.installment_amount)}</b></div>
+          <div><span>Total</span><b>${brl(selected.total_amount)}</b></div>
+        </section>`:''}
+
+        <div class="lov-reneg-note">A opção marcada como <b>Recomendada</b> é a estratégia que estou indicando hoje para o planejamento de vocês. Você pode selecionar outra sem confirmar a contratação no banco; enquanto estiver como simulação, dá para trocar novamente.</div>
+
+        <section class="lov-reneg-options">
+          ${options.map(o=>{
+            const extra=Number(o.total_amount||0)-Number(detail.original_amount||0);
+            return `<article class="lov-reneg-option ${o.selected?'selected':''} ${o.recommended?'recommended':''}">
+              <div class="lov-reneg-option-top">
+                <div><h3>${esc(o.label)}</h3><div class="lov-reneg-badges">${o.recommended?'<span class="lov-rec-badge">★ Recomendada</span>':''}${o.selected?'<span class="lov-selected-badge">✓ Sua escolha</span>':''}</div></div>
+                <strong>${brl(o.total_amount)}</strong>
+              </div>
+              <div class="lov-reneg-option-grid">
+                <div><span>Entrada</span><b>${brl(o.entry_amount)}</b><small>${dateBR(o.entry_due_date)}</small></div>
+                <div><span>Parcelamento</span><b>${o.installments_count}x de ${brl(o.installment_amount)}</b><small>1ª em ${dateBR(o.first_installment_due)}</small></div>
+                <div><span>Custo acima do original</span><b class="${extra>0?'negative':''}">${brl(extra)}</b><small>Total − dívida original</small></div>
+              </div>
+              <div class="lov-reneg-option-foot">
+                <small>${esc(o.notes||'Confira a tela final do banco antes de contratar.')}</small>
+                ${detail.status==='simulation'&&!o.selected?`<button class="btn" onclick="G.selectRenegOptionV16('${o.id}','${String(o.label).replaceAll("'","\\'")}')">Escolher esta opção</button>`:o.selected?'<span class="lov-current-choice">Opção ativa na simulação</span>':''}
+              </div>
+            </article>`;
+          }).join('')||empty('As opções de parcelamento ainda não foram cadastradas.')}
+        </section>`;
+    }
+
+    return `<div class="lov-section-toolbar"><p>Simulações só viram obrigação real quando você confirma que contratou. Clique em uma renegociação para ver todas as opções.</p></div>
       <section class="panel lov-section-panel"><div class="panelhead"><h2>Renegociações</h2><span class="small muted">${rows.length} registro(s)</span></div>
-      ${rows.length?`<div class="lov-data-list">${rows.map(r=>`<div class="lov-data-row"><div><b>${esc(r.description)}</b><span>Original ${brl(r.original_amount)} · total ${brl(r.total_amount)}</span></div><strong>${brl(r.total_amount)}</strong><span class="badge ${r.status}">${status(r.status)}</span>${r.status==='simulation'?`<button class="btn sm" onclick="G.contract('${r.id}')">Contratei</button>`:'<span></span>'}</div>`).join('')}</div>`:empty('Nenhuma renegociação cadastrada.')}</section>`;
+      ${rows.length?`<div class="lov-reneg-list">${rows.map(r=>{
+        const options=(S.renegOptions||[]).filter(o=>o.renegotiation_id===r.id);
+        const selected=options.find(o=>o.selected);
+        const recommended=options.find(o=>o.recommended);
+        return `<button class="lov-reneg-row" onclick="G.openRenegDetailV16('${r.id}')">
+          <div><b>${esc(r.description)}</b><span>Original ${brl(r.original_amount)} · ${options.length} opção(ões)${selected?` · escolhida: ${esc(selected.label)}`:''}</span></div>
+          <div class="lov-reneg-row-value"><strong>${brl(selected?.total_amount??r.total_amount)}</strong>${recommended?'<small>★ recomendação disponível</small>':''}</div>
+          <span class="badge ${r.status}">${status(r.status)}</span><span class="lov-reneg-chevron">›</span>
+        </button>`;
+      }).join('')}</div>`:empty('Nenhuma renegociação cadastrada.')}</section>`;
   }
+
+  G.openRenegDetailV16=id=>{S.renegDetailId=id;C.render()};
+  G.closeRenegDetailV16=()=>{S.renegDetailId=null;C.render()};
+  G.selectRenegOptionV16=async(id,label)=>{
+    if(!confirm(`Trocar a simulação para "${label}"?\n\nIsso NÃO confirma a contratação no banco. Só atualiza a opção usada no planejamento e nas projeções.`))return;
+    await C.mutate(()=>C.rpc('select_renegotiation_option',{p_option_id:id}),'Opção da renegociação atualizada');
+  };
 
   function guidePage(){
     const c=S.household?.settings||{};
