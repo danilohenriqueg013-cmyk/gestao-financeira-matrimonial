@@ -1,6 +1,6 @@
 {
-  "name":"Gestão Financeira Matrimonial",
-  "short_name":"Nosso Caixa",
+  "name":"Gestão Financeira",
+  "short_name":"Gestão Financeira",
   "start_url":"./",
   "scope":"./",
   "display":"standalone",
