@@ -19,7 +19,7 @@
   V.transactions=()=>{
     let html=previous();
     const t=totals(S.txMonth);
-    const footer=`<div class="month-ledger-totals"><div class="month-ledger-title"><b>Totais de ${H.monthLabel(S.txMonth)}</b><span>Estes valores não mudam quando você usa os filtros acima.</span></div>
+    const footer=`<div class="month-ledger-totals"><div class="month-ledger-title"><b>Totais de ${H.monthLabel(S.txMonth)}</b><span></span></div>
       <div class="month-ledger-grid">
         <div class="ledger-group income"><div class="ledger-group-title">Receitas</div><div><span>Já recebido</span><b>${brl(t.incomeReceived)}</b></div><div><span>A receber</span><b>${brl(t.incomePending)}</b></div><div class="absolute"><span>Total absoluto</span><b>${brl(t.incomeTotal)}</b></div></div>
         <div class="ledger-group expense"><div class="ledger-group-title">Despesas</div><div><span>Já pago</span><b>${brl(t.expensePaid)}</b></div><div><span>A pagar</span><b>${brl(t.expensePending)}</b></div><div class="absolute"><span>Total absoluto</span><b>${brl(t.expenseTotal)}</b></div></div>
