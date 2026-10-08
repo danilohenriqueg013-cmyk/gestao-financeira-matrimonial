@@ -61,22 +61,45 @@
 
   function projectionsPage(){
     const months=monthRange(today().slice(0,7),'2027-12');
+    const activeReneg=(S.reneg||[]).filter(r=>r.status==='simulation');
+
     const rows=months.map(m=>{
       const real=S.tx.filter(t=>H.monthKey(txDate(t))===m&&!['cancelled','simulation','renegotiated'].includes(t.status));
       const income=real.filter(t=>t.type==='income').reduce((s,t)=>s+amount(t),0);
       const expense=real.filter(t=>t.type!=='income').reduce((s,t)=>s+amount(t),0);
       const sim=S.tx.filter(t=>H.monthKey(txDate(t))===m&&t.status==='simulation').reduce((s,t)=>s+amount(t),0);
-      return{m,income,expense,net:income-expense,sim};
+
+      // Parcelas geradas pela opção atualmente selecionada em cada renegociação.
+      const markedPlan=S.tx
+        .filter(t=>H.monthKey(txDate(t))===m&&t.status==='simulation'&&t.origin==='renegotiation')
+        .reduce((s,t)=>s+amount(t),0);
+
+      // No mês da dívida original, a simulação substitui a fatura original em vez de somar as duas.
+      const originalsReplaced=activeReneg.reduce((sum,r)=>{
+        const original=S.tx.find(t=>
+          t.credit_card_id===r.credit_card_id &&
+          t.type==='card_payment' &&
+          t.status==='pending' &&
+          t.origin!=='renegotiation' &&
+          H.monthKey(txDate(t))===m &&
+          Math.abs(amount(t)-Number(r.original_amount||0))<0.01
+        );
+        return sum+(original?amount(original):0);
+      },0);
+
+      const markedResult=(income-expense)+originalsReplaced-markedPlan;
+      return{m,income,expense,net:income-expense,sim,markedPlan,originalsReplaced,markedResult};
     });
+
     const inc=rows.reduce((s,x)=>s+x.income,0),exp=rows.reduce((s,x)=>s+x.expense,0);
     return `<section class="lov-summary-strip">
         <div><span>Receitas previstas</span><b>${brl(inc)}</b></div>
         <div><span>Despesas previstas</span><b>${brl(exp)}</b></div>
         <div><span>Resultado previsto</span><b class="${inc-exp<0?'negative':'positive'}">${brl(inc-exp)}</b></div>
       </section>
-      <section class="panel lov-section-panel"><div class="panelhead"><h2>Projeção mensal</h2><span class="small muted">Do mês atual até dezembro/2027</span></div>
-      <div class="tablewrap"><table class="table lov-projection-table"><thead><tr><th>Mês</th><th>Receitas</th><th>Despesas</th><th>Resultado</th><th>Simulações</th></tr></thead><tbody>
-      ${rows.map(x=>`<tr><td><b>${H.monthLabel(x.m)}</b></td><td>${brl(x.income)}</td><td>${brl(x.expense)}</td><td class="${x.net<0?'negative':'positive'}">${brl(x.net)}</td><td>${x.sim?brl(x.sim):'—'}</td></tr>`).join('')}
+      <section class="panel lov-section-panel"><div class="panelhead"><div><h2>Projeção mensal</h2><span class="small muted">Do mês atual até dezembro/2027</span></div><span class="small muted">“Com opção marcada” substitui a fatura original pelo parcelamento selecionado nas renegociações.</span></div>
+      <div class="tablewrap"><table class="table lov-projection-table"><thead><tr><th>Mês</th><th>Receitas</th><th>Despesas</th><th>Resultado</th><th>Simulações</th><th>Resultado com opção marcada</th></tr></thead><tbody>
+      ${rows.map(x=>`<tr><td><b>${H.monthLabel(x.m)}</b></td><td>${brl(x.income)}</td><td>${brl(x.expense)}</td><td class="${x.net<0?'negative':'positive'}">${brl(x.net)}</td><td>${x.sim?brl(x.sim):'—'}</td><td class="lov-marked-result ${x.markedResult<0?'negative':'positive'}"><b>${brl(x.markedResult)}</b>${x.originalsReplaced?'<small>fatura original substituída</small>':''}</td></tr>`).join('')}
       </tbody></table></div></section>`;
   }
 
