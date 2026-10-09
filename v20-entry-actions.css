@@ -1,0 +1,13 @@
+.btn.danger{border-color:rgba(190,24,93,.28);background:rgba(190,24,93,.07);color:#be185d}
+.btn.danger:hover{background:rgba(190,24,93,.13)}
+.manage-actions{gap:8px;flex-wrap:wrap}
+.manage-note{margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(120,120,120,.08);font-size:12px;line-height:1.45;color:var(--muted,#6b7280)}
+.entry-actions{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.lov-item-row-manage{grid-template-columns:minmax(0,1fr) auto auto!important;gap:12px;align-items:center}
+.manage-table td:last-child{min-width:150px}
+@media(max-width:720px){
+  .lov-item-row-manage{grid-template-columns:minmax(0,1fr) auto!important}
+  .lov-item-row-manage>.entry-actions{grid-column:1/-1;justify-content:flex-start}
+  .entry-actions .btn{min-height:36px}
+  .manage-table td:last-child{min-width:132px}
+}
