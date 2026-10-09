@@ -156,9 +156,8 @@
       <form onsubmit="G.submitCardItemEditV20(event,'${i.id}')" class="formgrid">
         <div class="field full"><label>Descrição</label><input name="item" value="${esc(i.item)}" required></div>
         <div class="field"><label>Valor</label><input name="amount" inputmode="decimal" value="${String(Number(i.amount||0).toFixed(2)).replace('.',',')}" required></div>
-        <div class="field"><label>Reembolso esperado</label><input name="reimb" inputmode="decimal" value="${String(Number(i.reimbursement_expected||0).toFixed(2)).replace('.',',')}"></div>
-        <div class="field full"><label>Quem reembolsa</label><input name="reimburser" value="${esc(i.reimburser||'')}" placeholder="Ex.: Carol"></div>
-        <div class="field full manage-note">A edição vale para este lançamento/parcela. O total da fatura é recalculado automaticamente.</div>
+        <div class="field full"><label>Reembolso</label><div class="readonly">${Number(i.reimbursement_expected||0)>0?`${brl(i.reimbursement_expected)} · ${esc(i.reimburser||'A receber')}`:'Sem reembolso'}</div></div>
+        <div class="field full manage-note">A edição vale para este lançamento/parcela. O total da fatura é recalculado automaticamente. Reembolsos são gerenciados separadamente para não alterar recebimentos por engano.</div>
         <div class="field full formactions"><button class="btn danger" type="button" onclick="G.deleteCardItemV20('${i.id}')">Excluir lançamento</button><button class="btn" type="button" onclick="G.close()">Cancelar</button><button class="btn primary">Salvar alterações</button></div>
       </form>
     </div></div>`;
@@ -166,17 +165,16 @@
 
   G.submitCardItemEditV20=async(e,id)=>{
     e.preventDefault();
-    const i=by(S.cardSchedule,id),f=new FormData(e.target),amount=num(f.get('amount')),reimbValue=num(f.get('reimb'));
+    const i=by(S.cardSchedule,id),f=new FormData(e.target),amount=num(f.get('amount'));
     if(!i)return;
     if(!(amount>=0))return toast('Informe um valor válido.',true);
-    if(reimbValue>amount)return toast('O reembolso não pode ser maior que o lançamento.',true);
     await mutate(()=>rpc('manage_card_schedule_item',{
       p_item_id:id,
       p_action:'edit',
       p_item:String(f.get('item')||'').trim(),
       p_amount:amount,
-      p_reimbursement_expected:reimbValue,
-      p_reimburser:String(f.get('reimburser')||'').trim()||null
+      p_reimbursement_expected:Number(i.reimbursement_expected||0),
+      p_reimburser:i.reimburser||null
     }),'Lançamento do cartão atualizado');
   };
 
