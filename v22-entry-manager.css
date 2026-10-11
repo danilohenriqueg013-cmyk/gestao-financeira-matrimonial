@@ -1,0 +1,10 @@
+.tx-row-actions{display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.manage-launch-table td:last-child{min-width:190px}
+.manage-launch-table .btn.sm{white-space:nowrap}
+@media(max-width:820px){
+  .manage-launch-table td:last-child{min-width:160px}
+  .tx-row-actions{justify-content:flex-start}
+}
+@media(max-width:640px){
+  .manage-launch-table{min-width:860px}
+}
